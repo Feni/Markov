@@ -43,7 +43,6 @@ public class MarkovRandomField<T> {
 		return n;
 	}
 	
-	
 	public int[] diff(int[] a, int[] b){
 		assert a.length == b.length: "Arrays have to be of the same length to difference";
 		int[] difference = new int[a.length];
@@ -57,19 +56,21 @@ public class MarkovRandomField<T> {
 		if(newNode instanceof KnownMarkovNode){
 			knownNodeCount++;
 //			System.out.println(sequence.keySet());
-			for(IntBuffer coord: sequence.keySet()){
-				//MarkovNode n = ;
-				//System.out.println("n is " + Arrays.toString(coord.array()));
-				if(sequence.get(coord) instanceof KnownMarkovNode){
-					KnownMarkovNode<T> n = (KnownMarkovNode<T>) sequence.get(coord);
-					int[] distance = diff(currentPos, coord.array());
-					//System.out.println("diff between " + newNode + " and " + n + " is " + Arrays.toString(distance));
-					n.addConnection(newNode, 1.0f, distance);
-				}
-			}
 		}else{
 			unknownNodeCount++;
 		}
+		
+		for(IntBuffer coord: sequence.keySet()){
+			//MarkovNode n = ;
+			//System.out.println("n is " + Arrays.toString(coord.array()));
+			//if(sequence.get(coord) instanceof KnownMarkovNode){
+				MarkovNode<T> n = (MarkovNode<T>) sequence.get(coord);
+				int[] distance = diff(currentPos, coord.array());
+				//System.out.println("diff between " + newNode + " and " + n + " is " + Arrays.toString(distance));
+				n.addConnection(newNode, 1.0f, distance);
+			//}
+		}
+		
 		
 		
 		// THEN add it (so that it doesn't get connected with itself)
@@ -94,6 +95,19 @@ public class MarkovRandomField<T> {
 				break;
 			}
 		}		
+	}
+	
+	public void compile(){
+		for(MarkovNode<T> node: nodes.values()){
+			node.compileProbabilities();
+		}
+	}
+	
+	public void solve(){
+
+		
+		
+		
 	}
 	
 }

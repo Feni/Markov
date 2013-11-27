@@ -1,5 +1,7 @@
 import java.nio.IntBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 
@@ -28,11 +30,15 @@ public abstract class MarkovNode<T> {
 		if(conn == null){ // Create a new connection
 			conn = new MarkovConnection<T>(this, node, 0);
 			atD.put(node, conn);
-			node.addConnection(this, conn, distanceBack(distance));
+			int[] dBack = distanceBack(distance);
+			node.addConnection(this, conn, dBack);
+			if(node instanceof KnownMarkovNode)
+				node.addWeightAtDistance(weight, dBack);
 		}
 		// Increment the weight of an existing connection. 
 		conn.weight += weight;
-		addWeightAtDistance(weight, distance);
+		if(node instanceof KnownMarkovNode)
+			addWeightAtDistance(weight, distance);
 	}
 	
 	public void addConnection(MarkovNode<T> node, MarkovConnection<T> conn, int... distance){
@@ -66,13 +72,16 @@ public abstract class MarkovNode<T> {
 			
 			// What is the probability that T is the next node at the given coordinate?
 			HashMap<T, Float> coordProb = new HashMap<T, Float>();
-			double probabilitiesSum = locationProbSum.get(coord);
-			for(MarkovNode<T> node: coordConnections.keySet()){
-				if(node instanceof KnownMarkovNode){
-					coordProb.put( ( (KnownMarkovNode<T>) node).value, (float) (coordConnections.get(node).weight / probabilitiesSum));					
+			
+			if(locationProbSum.containsKey(coord)){
+				double probabilitiesSum = locationProbSum.get(coord);
+				for(MarkovNode<T> node: coordConnections.keySet()){
+					if(node instanceof KnownMarkovNode){
+						coordProb.put( ( (KnownMarkovNode<T>) node).value, (float) (coordConnections.get(node).weight / probabilitiesSum));					
+					}
 				}
+				locationProbabilities.put(coord, coordProb);
 			}
-			locationProbabilities.put(coord, coordProb);
 		}
 	}
 	
@@ -105,6 +114,43 @@ class UnknownMarkovNode<T> extends MarkovNode<T>{
 	public String toString(){
 		return "?"; 
 	}	
+	
+	
+	public void simpleBestGuess(){
+		
+		HashMap<T, Float> sums = new HashMap<T, Float>();
+		
+		// Just find the highest probability vote for it. 
+		// assert compile for each node has already been called before this. 
+		for(IntBuffer coord: connections.keySet()){
+			IntBuffer revCoord = IntBuffer.wrap(distanceBack(coord.array()));
+			HashMap<MarkovNode<T>, MarkovConnection<T>> coordConnections = connections.get(coord);
+			
+			for(MarkovNode<T> node: coordConnections.keySet()){
+				//node.getConnectionsAtDistance(revCoord);
+				System.out.println(node.toString() + " at " + Arrays.toString(revCoord.array()) + " suggests " + node.locationProbabilities.get(revCoord));
+				
+				
+				if(node.locationProbabilities.containsKey(revCoord)){
+					HashMap<T, Float> suggestionsList = node.locationProbabilities.get(revCoord);
+					
+					for (Entry<T, Float> entry : suggestionsList.entrySet()) {
+						if(sums.containsKey(entry.getKey())){
+							sums.put(entry.getKey(), sums.get(entry.getKey()) + entry.getValue());
+						}else{			    
+							sums.put(entry.getKey(), entry.getValue());
+						}
+					}
+				}
+			}
+			//locationProbabilities.put(coord, coordProb);
+		}
+		
+		System.out.println("Final sums are " );
+		for (Entry<T, Float> entry : sums.entrySet()) {
+			System.out.println("" + entry.getKey() + " : " + entry.getValue() );
+		}
+	}
 }
 
 class MarkovMessage<T>{
@@ -115,3 +161,14 @@ class MarkovMessage<T>{
 		
 	}
 }
+
+/*
+System.out.println("Coord is " + Arrays.toString(coord.array()));
+
+for(IntBuffer b : locationProbSum.keySet()){
+	System.out.println("Locatino prob sum key " + Arrays.toString(b.array()) + " is " + locationProbSum.get(b));				
+}
+
+
+*/
+
