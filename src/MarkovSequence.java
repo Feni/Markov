@@ -1,26 +1,14 @@
-import java.util.LinkedList;
 
-
-public class MarkovSequence<T> {
+public class MarkovSequence {
 	// Define a 1 dimensional markov random field
-	MarkovRandomField<T> mrf = new MarkovRandomField<T>(1);
 	
-	
-	
-	int sequenceIndex = 0;
-	
-	public void add(T element){
-		MarkovNode<T> elementNode = new MarkovNode<T>(element, sequenceIndex++);
-		mrf.add(elementNode);
-		
-		//sequence.add(element);
-		
+	public static void main(String args[]){
+		MarkovRandomField<String> mrf = new MarkovRandomField<String>(2, 3);
+		mrf.add(mrf.newNode("Hello"));
+		mrf.add(mrf.newNode("World"));
+		mrf.add(mrf.newNode("Super"));
+		mrf.add(mrf.newNode("Man"));
 	}
 	
-	/** 
-	 * @return next predicted object in sequence or null. 
-	 */
-	public Object next(){
-		return null;
-	}
+
 }

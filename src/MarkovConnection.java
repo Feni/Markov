@@ -5,14 +5,14 @@ public class MarkovConnection<T> implements Comparable<MarkovConnection<T>>{
 	MarkovRandomField<T> mrf;
 	// The difference between source and destination's locations.
 	// ex. If src = 3 and dst = 4. offset = 1.
-	int[] offset; //= new int[MarkovRandomField.DIMENSIONS];
+	//int[] offset; //= new int[MarkovRandomField.DIMENSIONS];
 	float weight = 0.0f;
 	
-	public MarkovConnection(MarkovNode<T> src, MarkovNode<T> dst, MarkovRandomField<T> markov, float w, int... off){
+	public MarkovConnection(MarkovNode<T> src, MarkovNode<T> dst, MarkovRandomField<T> markov, float w){//, int... off){
 		source = src;
 		destination = dst;
 		mrf = markov;
-		offset = off;
+//		offset = off;
 		weight = w;
 	}
 	
