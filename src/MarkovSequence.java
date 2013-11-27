@@ -13,8 +13,7 @@ public class MarkovSequence {
 		mrf.add(mrf.newNode("Dude"));
 		//mrf.add(mrf.newNode("Hello"));
 		//mrf.add(mrf.newNode("World"));
-		mrf.add(mrf.newNode("Hello"));
-		
+		mrf.add(mrf.newNode("Sup"));
 		
 		UnknownMarkovNode<String> unk = new UnknownMarkovNode<String>();
 		mrf.add(unk);

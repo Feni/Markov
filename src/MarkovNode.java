@@ -23,7 +23,7 @@ public abstract class MarkovNode<T> {
 	}	
 	
 	public void addConnection(MarkovNode<T> node, float weight, int... distance){
-		System.out.println(this.toString() + " Adding connection to " + node.toString());
+		System.out.println(this.toString() + " Adding connection to " + node.toString() + " ("+weight+")");
 		HashMap<MarkovNode<T>, MarkovConnection<T>> atD = getConnectionsAtDistance(distance);
 		MarkovConnection<T> conn = atD.get(node);
 		
@@ -32,13 +32,11 @@ public abstract class MarkovNode<T> {
 			atD.put(node, conn);
 			int[] dBack = distanceBack(distance);
 			node.addConnection(this, conn, dBack);
-			if(node instanceof KnownMarkovNode)
-				node.addWeightAtDistance(weight, dBack);
+			node.addWeightAtDistance(weight, dBack);
 		}
 		// Increment the weight of an existing connection. 
 		conn.weight += weight;
-		if(node instanceof KnownMarkovNode)
-			addWeightAtDistance(weight, distance);
+		addWeightAtDistance(weight, distance);
 	}
 	
 	public void addConnection(MarkovNode<T> node, MarkovConnection<T> conn, int... distance){
@@ -75,12 +73,19 @@ public abstract class MarkovNode<T> {
 			
 			if(locationProbSum.containsKey(coord)){
 				double probabilitiesSum = locationProbSum.get(coord);
-				for(MarkovNode<T> node: coordConnections.keySet()){
-					if(node instanceof KnownMarkovNode){
-						coordProb.put( ( (KnownMarkovNode<T>) node).value, (float) (coordConnections.get(node).weight / probabilitiesSum));					
+				if(probabilitiesSum > 0){
+					boolean unkAtLoc = false;
+					for(MarkovNode<T> node: coordConnections.keySet()){
+						if(node instanceof KnownMarkovNode){
+							coordProb.put( ( (KnownMarkovNode<T>) node).value, (float) (coordConnections.get(node).weight / probabilitiesSum));					
+						}else{
+							unkAtLoc = true;
+						}
 					}
+					// Save it only if there's an unknown at this offset. 
+					if(unkAtLoc)
+						locationProbabilities.put(coord, coordProb);
 				}
-				locationProbabilities.put(coord, coordProb);
 			}
 		}
 	}

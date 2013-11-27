@@ -67,7 +67,8 @@ public class MarkovRandomField<T> {
 				MarkovNode<T> n = (MarkovNode<T>) sequence.get(coord);
 				int[] distance = diff(currentPos, coord.array());
 				//System.out.println("diff between " + newNode + " and " + n + " is " + Arrays.toString(distance));
-				n.addConnection(newNode, 1.0f, distance);
+				n.addConnection(newNode, newNode instanceof KnownMarkovNode ? 1.0f : 0.0f, distance);
+				
 			//}
 		}
 		
@@ -104,10 +105,9 @@ public class MarkovRandomField<T> {
 	}
 	
 	public void solve(){
-
-		
-		
-		
+		for(MarkovNode<T> node: nodes.values()){
+			node.compileProbabilities();
+		}
 	}
 	
 }
