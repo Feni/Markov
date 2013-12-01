@@ -10,6 +10,7 @@ public class MarkovRandomField<T> {
 	public int[] size;
 	
 	HashMap<T, MarkovNode<T>> nodes = new HashMap<T, MarkovNode<T>>();
+	ArrayList<UnknownMarkovNode<T>> unknowns = new ArrayList<UnknownMarkovNode<T>>();
 	
 	//ArrayList<MarkovNode<T>> sequence = new LinkedList<MarkovNode<T>>();
 	//@SuppressWarnings("rawtypes")
@@ -41,6 +42,12 @@ public class MarkovRandomField<T> {
 			System.out.println("Creating new "+n);
 		}
 		return n;
+	}
+	
+	public UnknownMarkovNode<T> newUnknown(){
+		UnknownMarkovNode<T> unk = new UnknownMarkovNode<T>();
+		unknowns.add(unk);
+		return unk;
 	}
 	
 	public int[] diff(int[] a, int[] b){
@@ -105,9 +112,14 @@ public class MarkovRandomField<T> {
 	}
 	
 	public void solve(){
-		for(MarkovNode<T> node: nodes.values()){
-			node.compileProbabilities();
+		for(UnknownMarkovNode<T> unk: unknowns){
+			((UnknownMarkovNode<T>) unk).simpleBestGuess();
 		}
 	}
 	
+	public void initialize(){
+		for(MarkovNode<T> node: nodes.values()){
+			node.initializeState();
+		}
+	}
 }

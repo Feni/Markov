@@ -2,6 +2,11 @@ import java.nio.IntBuffer;
 import java.util.Arrays;
 
 
+// Step 1: Add in the sequence
+// Step 2: initializeState using global suggestions (each patch gets what's suggested to it as the optimal state for it)
+// Step 3: Identity crisis - Each patch looks at all messages and figures out what it should be. 
+// Step 4: Proclamation - The node tells all other nodes of it's current state. 
+
 public class MarkovSequence {
 	// Define a 1 dimensional markov random field
 	
@@ -13,12 +18,12 @@ public class MarkovSequence {
 		mrf.add(mrf.newNode("Dude"));
 		//mrf.add(mrf.newNode("Hello"));
 		//mrf.add(mrf.newNode("World"));
-		mrf.add(mrf.newNode("Sup"));
+		//mrf.add(mrf.newNode("Sup"));
 		
-		UnknownMarkovNode<String> unk = new UnknownMarkovNode<String>();
+		UnknownMarkovNode<String> unk = mrf.newUnknown();
 		mrf.add(unk);
+		mrf.add(mrf.newUnknown());
 		System.out.println("Unk connections is " + unk.connections);
-		
 		
 		/*
 		System.out.println("Hello is : " + mrf.nodes.get("Hello"));
@@ -39,7 +44,11 @@ public class MarkovSequence {
 		
 		//mrf.nodes.get("Hello").compileProbabilities();
 		mrf.compile();
-		unk.simpleBestGuess();
+		mrf.solve();
+		
+		mrf.initialize();
+		
+		//unk.simpleBestGuess();
 		//System.out.println("After compile Hello probs at one : " + mrf.nodes.get("Hello").locationProbabilities.get(oneBuffer).values());
 		
 		
