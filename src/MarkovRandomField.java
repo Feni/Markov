@@ -85,26 +85,29 @@ public class MarkovRandomField<T> {
 		}		
 	}
 	
-	public void compile(){
-		//for(MarkovNode<T> node: nodes.values()){
-			//node.compileProbabilities();
-		//}
-	}
-	
 	public void solve(){
 		for(MarkovCoordinate coord: unknowns){
 			UnknownMarkovNode<T> unk = (UnknownMarkovNode<T>) sequence.get(coord);
 			unk.initializeIdentity();
 		}
 		
-		for(int i = 0; i < 2; i++){
+		
+		for(int i = 0; i < 10; i++){
+			System.out.println("Identity crisis version : " + i);
+			boolean changed = false;
 			for(MarkovCoordinate coord: unknowns){
 				UnknownMarkovNode<T> unk = (UnknownMarkovNode<T>) sequence.get(coord);
-				unk.decideIdentity();
+				changed = changed || unk.decideIdentity();
 			}
 			for(MarkovCoordinate coord: unknowns){
 				UnknownMarkovNode<T> unk = (UnknownMarkovNode<T>) sequence.get(coord);
 				unk.notifyNeighbors();
+			}
+			
+			// We've reached a steady state
+			if(!changed){
+				System.out.println("Early termination at steady state");
+				break;
 			}
 		}
 	}

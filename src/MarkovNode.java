@@ -1,7 +1,3 @@
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
 public abstract class MarkovNode<T> {
 	
 	public static int[] distanceBack(int... distance){

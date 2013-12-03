@@ -10,16 +10,23 @@ public class MarkovSequence {
 	// Define a 1 dimensional markov random field
 	
 	public static void main(String args[]){
-		MarkovRandomField<String> mrf = new MarkovRandomField<String>(50);
-		mrf.add(mrf.newNode("A"));
+		MarkovRandomField<String> mrf = new MarkovRandomField<String>(2, 5);
+//		mrf.add(mrf.newNode("?"));
+		mrf.add(mrf.newUnknown());
 		mrf.add(mrf.newNode("B"));
+		
 		mrf.add(mrf.newNode("C"));
+		mrf.add(mrf.newNode("B"));
+		
+		mrf.add(mrf.newNode("A"));
 		mrf.add(mrf.newNode("B"));
 //		mrf.add(mrf.newNode("B"));
 //		mrf.add(mrf.newNode("A"));
 //		mrf.add(mrf.newNode("C"));
 //		mrf.add(mrf.newNode("A"));
 		mrf.add(mrf.newUnknown());
+		mrf.add(mrf.newUnknown());
+		//mrf.add(mrf.newUnknown());
 		mrf.solve();
 		
 		//((KnownMarkovNode) mrf.nodes.get("B")).printOffsets();

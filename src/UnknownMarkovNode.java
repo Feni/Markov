@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -50,7 +49,7 @@ public class UnknownMarkovNode<T> extends MarkovNode<T>{
 		}
 	}
 	
-	public void decideIdentity(){
+	public boolean decideIdentity(){
 		float maxWeight = 0.0f;
 		KnownMarkovNode<T> maxIdentity = null;
 		// Find the possibility with the highest weight
@@ -61,14 +60,18 @@ public class UnknownMarkovNode<T> extends MarkovNode<T>{
 			}
 		}
 		
+		boolean changed = currentIdentity != maxIdentity || Math.abs(currentWeight - (maxWeight / totalVotes)) > 0.001;
+		
 		currentIdentity = maxIdentity;
 		currentWeight = maxWeight / totalVotes;
 		
 		System.out.println(this +" decided to be " + currentIdentity + " with probability " + currentWeight);
 		
 		// Reset votes to get ready for next iteration
-		votes = baseVotes;
+		votes = new HashMap<KnownMarkovNode<T>, Float>(baseVotes);
 		totalVotes = baseTotal;
+		
+		return changed;
 	}
 	
 	public void notifyNeighbors(){
