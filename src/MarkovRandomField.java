@@ -9,17 +9,14 @@ public class MarkovRandomField<T> {
 	public int DIMENSIONS;	// 1-D, 2-D, etc.
 	public int[] size;
 	
+	// We have one specific MarkovNode for each discrete value of T that can appear. 
+	// i.e. only one MarkovNode to represent all "Hello" nodes. 
 	HashMap<T, MarkovNode<T>> nodes = new HashMap<T, MarkovNode<T>>();
-	ArrayList<UnknownMarkovNode<T>> unknowns = new ArrayList<UnknownMarkovNode<T>>();
+	// Keeps track of all of the unknown variables
+	ArrayList<MarkovCoordinate> unknowns = new ArrayList<MarkovCoordinate>();
+	// Keeps track of where each node is located in the image/sequence
+	HashMap<MarkovCoordinate, MarkovNode<T>> sequence = new HashMap<MarkovCoordinate, MarkovNode<T>>();
 	
-	//ArrayList<MarkovNode<T>> sequence = new LinkedList<MarkovNode<T>>();
-	//@SuppressWarnings("rawtypes")
-	//ArrayList<> sequence;// = new ArrayList();
-	HashMap<IntBuffer, MarkovNode<T>> sequence = new HashMap<IntBuffer, MarkovNode<T>>();
-	
-	int totalElements = 0;
-	int knownNodeCount = 0;
-	int unknownNodeCount = 0;
 	double totalConfidence = 0;	// maximize this. Only counted for unknown guesses
 	
 	int[] currentPos;
@@ -34,7 +31,6 @@ public class MarkovRandomField<T> {
 	}
 	
 	public MarkovNode<T> newNode(T val){
-		totalElements += 1;
 		MarkovNode<T> n = nodes.get(val);
 		if(n == null){						// Node doesn't exist yet. Create it. 
 			n = new KnownMarkovNode<T>(val);
@@ -45,9 +41,7 @@ public class MarkovRandomField<T> {
 	}
 	
 	public UnknownMarkovNode<T> newUnknown(){
-		UnknownMarkovNode<T> unk = new UnknownMarkovNode<T>();
-		unknowns.add(unk);
-		return unk;
+		return new UnknownMarkovNode<T>();
 	}
 	
 	public int[] diff(int[] a, int[] b){
@@ -59,42 +53,38 @@ public class MarkovRandomField<T> {
 	}
 	
 	public void add(MarkovNode<T> newNode){
-		// Connect it up with existing nodes
+		MarkovCoordinate newNodeCoord = new MarkovCoordinate(currentPos.clone());
+		
+		// Keep track of how many nodes we have to solve for
+		if(newNode instanceof UnknownMarkovNode){
+			unknowns.add(newNodeCoord);
+		}
+		
+		// Relate it to all existing nodes
+		// TODO: Only do this for nodes at a certain distance from currentNode
 		if(newNode instanceof KnownMarkovNode){
-			knownNodeCount++;
-//			System.out.println(sequence.keySet());
-		}else{
-			unknownNodeCount++;
-		}
-		
-		for(IntBuffer coord: sequence.keySet()){
-			//MarkovNode n = ;
-			//System.out.println("n is " + Arrays.toString(coord.array()));
-			//if(sequence.get(coord) instanceof KnownMarkovNode){
-				MarkovNode<T> n = (MarkovNode<T>) sequence.get(coord);
-				int[] distance = diff(currentPos, coord.array());
-				//System.out.println("diff between " + newNode + " and " + n + " is " + Arrays.toString(distance));
-				n.addConnection(newNode, newNode instanceof KnownMarkovNode ? 1.0f : 0.0f, distance);
-				
-			//}
-		}
-		
-		
-		
-		// THEN add it (so that it doesn't get connected with itself)
-		sequence.put(IntBuffer.wrap(currentPos.clone()), newNode);
-		totalElements += 1;		
-		//System.out.println("Current pos is now " + Arrays.toString(currentPos));
-		/*for(MarkovNode<T> existing: sequence){
-			int[] fwdDistance = new int[DIMENSIONS];
-			int[] backDistance = new int[DIMENSIONS];
-			for(int i = 0; i < DIMENSIONS; i++){
-				fwdDistance[i] = newNode.location[i] - existing.location[i];
-				backDistance[i] = -1 * fwdDistance[i];
+			KnownMarkovNode<T> knownNewNode = (KnownMarkovNode<T>) newNode;
+			for(MarkovCoordinate coord: sequence.keySet()){
+				//sequence.get(coord).addConnection(newNode, newNode instanceof KnownMarkovNode ? 1.0f : 0.0f, );
+				MarkovNode<T> n = sequence.get(coord);
+				if(n instanceof KnownMarkovNode){
+					int[] distance = diff(currentPos, coord.coords);
+					int[] revDistance = MarkovNode.distanceBack(distance);					
+					KnownMarkovNode<T> k =(KnownMarkovNode<T>) n;
+					knownNewNode.addConnection(k, 1.0f, distance);
+					k.addConnection(knownNewNode, 1.0f, revDistance);
+				}
 			}
-			MarkovConnection<T> connectionToNew = new MarkovConnection<T>(existingNode, newNode, this, )
-		} */
+		}
+				
+		// THEN add it (so that it doesn't get connected with itself)
+		sequence.put(newNodeCoord, newNode);
 		
+		incPos();
+	}
+	
+	// Increment position, carrying over based on size. 
+	public void incPos(){
 		for(int i = 0; i < DIMENSIONS; i++){
 			if(currentPos[i] == size[i] - 1){
 				currentPos[i] = 0;	// Carry
@@ -106,13 +96,14 @@ public class MarkovRandomField<T> {
 	}
 	
 	public void compile(){
-		for(MarkovNode<T> node: nodes.values()){
-			node.compileProbabilities();
-		}
+		//for(MarkovNode<T> node: nodes.values()){
+			//node.compileProbabilities();
+		//}
 	}
 	
 	public void solve(){
-		for(UnknownMarkovNode<T> unk: unknowns){
+		for(MarkovCoordinate coord: unknowns){
+			UnknownMarkovNode<T> unk = (UnknownMarkovNode<T>) sequence.get(coord);
 			((UnknownMarkovNode<T>) unk).simpleBestGuess();
 		}
 	}

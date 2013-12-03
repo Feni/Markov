@@ -1,21 +1,23 @@
-import java.nio.IntBuffer;
-import java.util.Arrays;
-
 
 // Step 1: Add in the sequence
 // Step 2: initializeState using global suggestions (each patch gets what's suggested to it as the optimal state for it)
 // Step 3: Identity crisis - Each patch looks at all messages and figures out what it should be. 
-// Step 4: Proclamation - The node tells all other nodes of it's current state. 
+// Step 4: Proclamation - The node tells all other nodes of it's current state.
+
+// Compute statistics for each patch as they're added. (Can be computed from shifting the statistics from the previous nodes). 
 
 public class MarkovSequence {
 	// Define a 1 dimensional markov random field
 	
 	public static void main(String args[]){
-		MarkovRandomField<String> mrf = new MarkovRandomField<String>(12);
-		mrf.add(mrf.newNode("Hello"));
-		mrf.add(mrf.newNode("World"));
-		mrf.add(mrf.newNode("Hello"));
-		mrf.add(mrf.newNode("Dude"));
+		MarkovRandomField<String> mrf = new MarkovRandomField<String>(50);
+		mrf.add(mrf.newNode("A"));
+		mrf.add(mrf.newNode("B"));
+		mrf.add(mrf.newNode("A"));
+		mrf.add(mrf.newNode("B"));
+		mrf.add(mrf.newNode("A"));
+		mrf.add(mrf.newNode("C"));
+		mrf.add(mrf.newNode("A"));
 		//mrf.add(mrf.newNode("Hello"));
 		//mrf.add(mrf.newNode("World"));
 		//mrf.add(mrf.newNode("Sup"));
@@ -23,9 +25,9 @@ public class MarkovSequence {
 		UnknownMarkovNode<String> unk = mrf.newUnknown();
 		mrf.add(unk);
 		mrf.add(mrf.newUnknown());
-		System.out.println("Unk connections is " + unk.connections);
+		/*System.out.println("Unk connections is " + unk.connections);
 		
-		/*
+		
 		System.out.println("Hello is : " + mrf.nodes.get("Hello"));
 		int[] one = {1};
 		IntBuffer oneBuffer = IntBuffer.wrap(one);
@@ -49,7 +51,8 @@ public class MarkovSequence {
 		mrf.initialize();
 
 		
-		System.out.println("Dude at -1 is " + mrf.nodes.get("Dude").locationProbabilities.get(new MarkovCoordinate(2)));		
+		//((KnownMarkovNode) mrf.nodes.get("A")).printOffsets();
+		//System.out.println("A at 1 is " + mrf.nodes.get("A").atOffset.get(new MarkovCoordinate(1)));		
 		//unk.simpleBestGuess();
 		//System.out.println("After compile Hello probs at one : " + mrf.nodes.get("Hello").locationProbabilities.get(oneBuffer).values());
 		
@@ -57,8 +60,6 @@ public class MarkovSequence {
 /*		for(IntBuffer b : mrf.nodes.get("Hello").connections.keySet()){
 			System.out.println("Distance " + Arrays.toString(b.array()) + " equals " + b.equals(oneBuffer));
 		} */
-		
-		
 		
 	}
 	

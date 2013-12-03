@@ -2,6 +2,7 @@
 public class MarkovConnection<T> implements Comparable<MarkovConnection<T>>{
 	MarkovNode<T> source;
 	MarkovNode<T> destination;
+	
 	float weight = 0.0f;
 	
 	public MarkovConnection(MarkovNode<T> src, MarkovNode<T> dst, float w){//, int... off){
