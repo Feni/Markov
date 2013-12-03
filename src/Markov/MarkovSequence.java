@@ -1,9 +1,9 @@
+package Markov;
 
 // Step 1: Add in the sequence
 // Step 2: initializeState using global suggestions (each patch gets what's suggested to it as the optimal state for it)
 // Step 3: Identity crisis - Each patch looks at all messages and figures out what it should be. 
 // Step 4: Proclamation - The node tells all other nodes of it's current state.
-
 // Compute statistics for each patch as they're added. (Can be computed from shifting the statistics from the previous nodes). 
 
 public class MarkovSequence {

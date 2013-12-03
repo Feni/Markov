@@ -1,31 +1,32 @@
+package Markov;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 
-public class UnknownMarkovNode<T> extends MarkovNode<T>{
+public class UnknownNode<T> extends Node<T>{
 	
 	// Number of 'votes' that this node is to be some particular value
 	//HashMap<KnownMarkovNode<T>, Float> isNode = new HashMap<KnownMarkovNode<T>, Float>();
 	
-	HashMap<MarkovCoordinate, KnownMarkovNode<T>> knownNeighbors = new HashMap<MarkovCoordinate, KnownMarkovNode<T>>();
-	HashMap<MarkovCoordinate, UnknownMarkovNode<T>> unkNeighbors = new HashMap<MarkovCoordinate, UnknownMarkovNode<T>>();	
+	HashMap<Coordinate, KnownNode<T>> knownNeighbors = new HashMap<Coordinate, KnownNode<T>>();
+	HashMap<Coordinate, UnknownNode<T>> unkNeighbors = new HashMap<Coordinate, UnknownNode<T>>();	
 	
 	//HashMap<UnknownMarkovNode<T>, MarkovCoordinate> unkNeighbors = new HashMap<UnknownMarkovNode<T>, MarkovCoordinate>();
 	int currentIteration = 0;
 		
-	HashMap<KnownMarkovNode<T>, Float> baseVotes;
+	HashMap<KnownNode<T>, Float> baseVotes;
 	double baseTotal = 0.0;
 	
-	HashMap<KnownMarkovNode<T>, Float> votes = new HashMap<KnownMarkovNode<T>, Float>();
+	HashMap<KnownNode<T>, Float> votes = new HashMap<KnownNode<T>, Float>();
 	double totalVotes = 0.0;
 	
-	KnownMarkovNode<T> currentIdentity;
+	KnownNode<T> currentIdentity;
 	double currentWeight;
 	
 	int id;
 	static int MAX_ID = 0;
 	
-	public UnknownMarkovNode(){
+	public UnknownNode(){
 		id = MAX_ID++;
 	}
 	
@@ -33,12 +34,12 @@ public class UnknownMarkovNode<T> extends MarkovNode<T>{
 		return "?<"+id+">"; 
 	}
 	
-	KnownMarkovNode<T> currentState;
+	KnownNode<T> currentState;
 	float currentStateConfidence = 0.0f;
 	
 	
-	public void addSuggestions(HashMap<KnownMarkovNode<T>, Float> possibilities, float weight){
-		for(Entry<KnownMarkovNode<T>, Float> possibleEntry : possibilities.entrySet() ){
+	public void addSuggestions(HashMap<KnownNode<T>, Float> possibilities, float weight){
+		for(Entry<KnownNode<T>, Float> possibleEntry : possibilities.entrySet() ){
 			float possibilityWeight = (possibleEntry.getValue() / weight);
 			totalVotes += possibilityWeight;
 			if(votes.containsKey(possibleEntry.getKey())){	// Add to existing votes
@@ -51,9 +52,9 @@ public class UnknownMarkovNode<T> extends MarkovNode<T>{
 	
 	public boolean decideIdentity(){
 		float maxWeight = 0.0f;
-		KnownMarkovNode<T> maxIdentity = null;
+		KnownNode<T> maxIdentity = null;
 		// Find the possibility with the highest weight
-		for(Entry<KnownMarkovNode<T>, Float> possibility : votes.entrySet() ){
+		for(Entry<KnownNode<T>, Float> possibility : votes.entrySet() ){
 			if(possibility.getValue() > maxWeight){
 				maxWeight = possibility.getValue();
 				maxIdentity = possibility.getKey();
@@ -68,7 +69,7 @@ public class UnknownMarkovNode<T> extends MarkovNode<T>{
 		System.out.println(this +" decided to be " + currentIdentity + " with probability " + currentWeight);
 		
 		// Reset votes to get ready for next iteration
-		votes = new HashMap<KnownMarkovNode<T>, Float>(baseVotes);
+		votes = new HashMap<KnownNode<T>, Float>(baseVotes);
 		totalVotes = baseTotal;
 		
 		return changed;
@@ -77,7 +78,7 @@ public class UnknownMarkovNode<T> extends MarkovNode<T>{
 	public void notifyNeighbors(){
 		// Given our current tentative identity, what do we think each of our unknown neighbors should be?
 		if(currentIdentity != null){
-			for(Entry<MarkovCoordinate, UnknownMarkovNode<T>> uNeighbor : unkNeighbors.entrySet() ){
+			for(Entry<Coordinate, UnknownNode<T>> uNeighbor : unkNeighbors.entrySet() ){
 				if(currentIdentity.atOffset.containsKey(uNeighbor.getKey())){
 					uNeighbor.getValue().addSuggestions(currentIdentity.atOffset.get(uNeighbor.getKey()), (float) currentWeight);
 				}
@@ -88,24 +89,24 @@ public class UnknownMarkovNode<T> extends MarkovNode<T>{
 	
 	public void initializeIdentity(){
 		// What does the known neighbors think this node should be?
-		for(Entry<MarkovCoordinate, KnownMarkovNode<T>> kNeighbor : knownNeighbors.entrySet() )
+		for(Entry<Coordinate, KnownNode<T>> kNeighbor : knownNeighbors.entrySet() )
 		{
-			MarkovCoordinate dBack = new MarkovCoordinate(distanceBack(kNeighbor.getKey().coords));
-			HashMap<KnownMarkovNode<T>, Float> kSuggestion =kNeighbor.getValue().atOffset.get( dBack );
+			Coordinate dBack = new Coordinate(distanceBack(kNeighbor.getKey().coords));
+			HashMap<KnownNode<T>, Float> kSuggestion =kNeighbor.getValue().atOffset.get( dBack );
 			System.out.println(""+kNeighbor.getValue() + " suggestion at " + dBack + " is " + kSuggestion);
 			if(kSuggestion != null)
 				addSuggestions(kSuggestion, 1.0f  );
 		}		
 		
-		baseVotes = new HashMap<KnownMarkovNode<T>, Float>(votes);
+		baseVotes = new HashMap<KnownNode<T>, Float>(votes);
 		baseTotal = totalVotes;
 	}
 	
-	public void addConnection(MarkovNode<T> node, float weight, int... distance){
-		if(node instanceof KnownMarkovNode){
-			knownNeighbors.put(new MarkovCoordinate(distance), (KnownMarkovNode<T>)node);
+	public void addConnection(Node<T> node, float weight, int... distance){
+		if(node instanceof KnownNode){
+			knownNeighbors.put(new Coordinate(distance), (KnownNode<T>)node);
 		}else{
-			unkNeighbors.put(new MarkovCoordinate(distance), (UnknownMarkovNode<T>) node);
+			unkNeighbors.put(new Coordinate(distance), (UnknownNode<T>) node);
 		}
 	}
 

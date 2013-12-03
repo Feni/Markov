@@ -1,4 +1,7 @@
-public abstract class MarkovNode<T> {
+package Markov;
+
+
+public abstract class Node<T> {
 	
 	public static int[] distanceBack(int... distance){
 		int[] dBack = new int[distance.length];
@@ -7,6 +10,6 @@ public abstract class MarkovNode<T> {
 		return dBack;
 	}	
 	
-	public abstract void addConnection(MarkovNode<T> node, float weight, int... distance);
+	public abstract void addConnection(Node<T> node, float weight, int... distance);
 			
 }

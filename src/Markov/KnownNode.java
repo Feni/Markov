@@ -1,31 +1,33 @@
+package Markov;
+
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
 
-public class KnownMarkovNode<T> extends MarkovNode<T>{
+public class KnownNode<T> extends Node<T>{
 	T value;
 	
 	// Keep a count of how many times we see a particular node at a particular distance 
-	TreeMap<MarkovCoordinate, HashMap<KnownMarkovNode<T>, Float>> atOffset = new TreeMap<MarkovCoordinate, HashMap<KnownMarkovNode<T>, Float>>();
+	TreeMap<Coordinate, HashMap<KnownNode<T>, Float>> atOffset = new TreeMap<Coordinate, HashMap<KnownNode<T>, Float>>();
 	
 	// Keep track of the sum at each location for convenience when calculating normalized probability from atOffset
-	TreeMap<MarkovCoordinate, Double> locationProbSum = new TreeMap<MarkovCoordinate, Double>();	
+	TreeMap<Coordinate, Double> locationProbSum = new TreeMap<Coordinate, Double>();	
 	
-	public KnownMarkovNode(T val){
+	public KnownNode(T val){
 		value = val;
 	}
 	
 	// Observe that node is distance from 'this' with given weight (generally 1)
-	public void addConnection(MarkovNode<T> node, float weight, int... distance){
-		if(node instanceof KnownMarkovNode){
-			KnownMarkovNode<T> knownNode = (KnownMarkovNode<T>)  node;
+	public void addConnection(Node<T> node, float weight, int... distance){
+		if(node instanceof KnownNode){
+			KnownNode<T> knownNode = (KnownNode<T>)  node;
 			
-			MarkovCoordinate iDistance = new MarkovCoordinate(distance);
+			Coordinate iDistance = new Coordinate(distance);
 			
-			HashMap<KnownMarkovNode<T>, Float> atOffD = atOffset.get(iDistance);
+			HashMap<KnownNode<T>, Float> atOffD = atOffset.get(iDistance);
 			if(atOffD == null){	// Nothing till now has been observed at that offset. 
-				atOffD = new HashMap<KnownMarkovNode<T>, Float>();
+				atOffD = new HashMap<KnownNode<T>, Float>();
 			}
 			
 			if(atOffD.containsKey(node)){
@@ -47,7 +49,7 @@ public class KnownMarkovNode<T> extends MarkovNode<T>{
 	}
 		
 	public void printOffsets(){
-		for(Entry<MarkovCoordinate, HashMap<KnownMarkovNode<T>, Float>> c : atOffset.entrySet()){
+		for(Entry<Coordinate, HashMap<KnownNode<T>, Float>> c : atOffset.entrySet()){
 			System.out.println(this + " at " + c.getKey() + " : " + c.getValue());
 		}
 	}
