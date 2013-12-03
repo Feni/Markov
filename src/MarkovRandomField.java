@@ -1,9 +1,5 @@
-import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
-
 
 public class MarkovRandomField<T> {
 	public int DIMENSIONS;	// 1-D, 2-D, etc.
@@ -35,7 +31,6 @@ public class MarkovRandomField<T> {
 		if(n == null){						// Node doesn't exist yet. Create it. 
 			n = new KnownMarkovNode<T>(val);
 			nodes.put(val, n);
-			System.out.println("Creating new "+n);
 		}
 		return n;
 	}
@@ -62,21 +57,16 @@ public class MarkovRandomField<T> {
 		
 		// Relate it to all existing nodes
 		// TODO: Only do this for nodes at a certain distance from currentNode
-		if(newNode instanceof KnownMarkovNode){
-			KnownMarkovNode<T> knownNewNode = (KnownMarkovNode<T>) newNode;
+			
 			for(MarkovCoordinate coord: sequence.keySet()){
 				//sequence.get(coord).addConnection(newNode, newNode instanceof KnownMarkovNode ? 1.0f : 0.0f, );
 				MarkovNode<T> n = sequence.get(coord);
-				if(n instanceof KnownMarkovNode){
-					int[] distance = diff(currentPos, coord.coords);
-					int[] revDistance = MarkovNode.distanceBack(distance);					
-					KnownMarkovNode<T> k =(KnownMarkovNode<T>) n;
-					knownNewNode.addConnection(k, 1.0f, distance);
-					k.addConnection(knownNewNode, 1.0f, revDistance);
-				}
+				int[] distance = diff(currentPos, coord.coords);
+				int[] revDistance = MarkovNode.distanceBack(distance);
+				n.addConnection(newNode, 1.0f, distance);
+				newNode.addConnection(n, 1.0f, revDistance);
 			}
-		}
-				
+		
 		// THEN add it (so that it doesn't get connected with itself)
 		sequence.put(newNodeCoord, newNode);
 		
@@ -104,13 +94,19 @@ public class MarkovRandomField<T> {
 	public void solve(){
 		for(MarkovCoordinate coord: unknowns){
 			UnknownMarkovNode<T> unk = (UnknownMarkovNode<T>) sequence.get(coord);
-			((UnknownMarkovNode<T>) unk).simpleBestGuess();
+			unk.initializeIdentity();
+		}
+		
+		for(int i = 0; i < 2; i++){
+			for(MarkovCoordinate coord: unknowns){
+				UnknownMarkovNode<T> unk = (UnknownMarkovNode<T>) sequence.get(coord);
+				unk.decideIdentity();
+			}
+			for(MarkovCoordinate coord: unknowns){
+				UnknownMarkovNode<T> unk = (UnknownMarkovNode<T>) sequence.get(coord);
+				unk.notifyNeighbors();
+			}
 		}
 	}
 	
-	public void initialize(){
-		for(MarkovNode<T> node: nodes.values()){
-			node.initializeState();
-		}
-	}
 }
