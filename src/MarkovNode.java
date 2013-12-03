@@ -5,16 +5,14 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-
 public abstract class MarkovNode<T> {
 	
-	TreeMap<IntBuffer, HashMap<MarkovNode<T>, MarkovConnection<T>>> connections = new TreeMap<IntBuffer, HashMap<MarkovNode<T>, MarkovConnection<T>>>();
-	HashMap<IntBuffer, HashMap<KnownMarkovNode<T>, Float>> locationProbabilities = new HashMap<IntBuffer, HashMap<KnownMarkovNode<T>, Float>>();
-	HashMap<IntBuffer, Double> locationProbSum = new HashMap<IntBuffer, Double>();
-	HashMap<IntBuffer, KnownMarkovNode<T>> locationMaxVal = new HashMap<IntBuffer, KnownMarkovNode<T>>();
-	HashMap<IntBuffer, Float> locationMaxProb = new HashMap<IntBuffer, Float>();
+	TreeMap<MarkovCoordinate, HashMap<MarkovNode<T>, MarkovConnection<T>>> connections = new TreeMap<MarkovCoordinate, HashMap<MarkovNode<T>, MarkovConnection<T>>>();
+	TreeMap<MarkovCoordinate, HashMap<KnownMarkovNode<T>, Float>> locationProbabilities = new TreeMap<MarkovCoordinate, HashMap<KnownMarkovNode<T>, Float>>();
+	TreeMap<MarkovCoordinate, Double> locationProbSum = new TreeMap<MarkovCoordinate, Double>();
+	TreeMap<MarkovCoordinate, KnownMarkovNode<T>> locationMaxVal = new TreeMap<MarkovCoordinate, KnownMarkovNode<T>>();
+	TreeMap<MarkovCoordinate, Float> locationMaxProb = new TreeMap<MarkovCoordinate, Float>();
 	
-
 	public int[] distanceBack(int... distance){
 		int[] dBack = new int[distance.length];
 		for(int i = 0; i < distance.length; i++)
@@ -38,7 +36,7 @@ public abstract class MarkovNode<T> {
 		conn.weight += weight;
 		addWeightAtDistance(weight, distance);
 		
-		IntBuffer iDist = IntBuffer.wrap(distance);
+		MarkovCoordinate iDist = new MarkovCoordinate(distance);
 		
 		if(!locationMaxProb.containsKey(iDist))
 			locationMaxProb.put(iDist, 0.0f);
@@ -55,7 +53,7 @@ public abstract class MarkovNode<T> {
 	}
 	
 	public HashMap<MarkovNode<T>, MarkovConnection<T>> getConnectionsAtDistance(int... distance){
-		IntBuffer iDistance = IntBuffer.wrap(distance);
+		MarkovCoordinate iDistance = new MarkovCoordinate(distance);
 		HashMap<MarkovNode<T>, MarkovConnection<T>> atDist = connections.get(iDistance);
 		if(atDist == null){
 			atDist = new HashMap<MarkovNode<T>, MarkovConnection<T>>();
@@ -65,7 +63,7 @@ public abstract class MarkovNode<T> {
 	}
 	
 	public void addWeightAtDistance(float w, int... distance){
-		IntBuffer iDistance = IntBuffer.wrap(distance);
+		MarkovCoordinate iDistance = new MarkovCoordinate(distance);
 		if(locationProbSum.containsKey(iDistance)){	 
 			locationProbSum.put(iDistance, locationProbSum.get(iDistance) + w);
 		}else{
@@ -77,7 +75,7 @@ public abstract class MarkovNode<T> {
 	// calculate the weights
 	public void compileProbabilities(){
 		//HashMap<IntBuffer, ArrayList<UnknownMarkovNode<T>>> unks = new HashMap<IntBuffer, ArrayList<UnknownMarkovNode<T>>>();
-		for(IntBuffer coord: connections.keySet()){
+		for(MarkovCoordinate coord: connections.keySet()){
 			HashMap<MarkovNode<T>, MarkovConnection<T>> coordConnections = connections.get(coord);
 			
 			// What is the probability that T is the next node at the given coordinate?
@@ -103,7 +101,7 @@ public abstract class MarkovNode<T> {
 					}
 					// Save it only if there's an unknown at this offset and we know what else should go there... 
 					if(unkAtLoc && coordProb.size() > 0)
-						locationProbabilities.put(IntBuffer.wrap(coord.array()), coordProb);
+						locationProbabilities.put(new MarkovCoordinate(coord.coords), coordProb);
 				}
 			}
 		}
@@ -125,8 +123,8 @@ class KnownMarkovNode<T> extends MarkovNode<T>{
 	}
 	
 	public void locs(){
-		for(IntBuffer b : connections.keySet()){
-			System.out.println("Distance " + Arrays.toString(b.array()));
+		for(MarkovCoordinate b : connections.keySet()){
+			System.out.println("Distance " + Arrays.toString(b.coords));
 		} 
 	}
 	
@@ -148,7 +146,7 @@ class UnknownMarkovNode<T> extends MarkovNode<T>{
 	
 	HashMap<KnownMarkovNode<T>, Float> baseState = new HashMap<KnownMarkovNode<T>, Float>();
 	
-	HashMap<UnknownMarkovNode<T>, IntBuffer> unkNeighbors = new HashMap<UnknownMarkovNode<T>, IntBuffer>();
+	HashMap<UnknownMarkovNode<T>, MarkovCoordinate> unkNeighbors = new HashMap<UnknownMarkovNode<T>, MarkovCoordinate>();
 	
 	int currentIteration = 0;
 	
@@ -204,19 +202,19 @@ class UnknownMarkovNode<T> extends MarkovNode<T>{
 		
 		// Just find the highest probability vote for it. 
 		// assert compile for each node has already been called before this. 
-		for(IntBuffer coord: connections.keySet()){
-			IntBuffer revCoord = IntBuffer.wrap(distanceBack(coord.array()));
+		for(MarkovCoordinate coord: connections.keySet()){
+			MarkovCoordinate revCoord = new MarkovCoordinate(distanceBack(coord.coords));
 			HashMap<MarkovNode<T>, MarkovConnection<T>> coordConnections = connections.get(coord);
 			
 			for(MarkovNode<T> node: coordConnections.keySet()){
 				//node.getConnectionsAtDistance(revCoord);
 				if(node.locationProbabilities.containsKey(revCoord)){
-					System.out.println(node.toString() + " at " + Arrays.toString(revCoord.array()) + " suggests " + node.locationProbabilities.get(revCoord));					
+					System.out.println(node.toString() + " at " + revCoord + " suggests " + node.locationProbabilities.get(revCoord));					
 					suggestionsList.add(node.locationProbabilities.get(revCoord));
 				} else if(node instanceof UnknownMarkovNode){
 					unkNeighbors.put((UnknownMarkovNode<T>) node, revCoord );
 					System.out.println("rev coord is " + revCoord);
-					System.out.println("Unk neighbor "+node + " at " + Arrays.toString(coord.array()));
+					System.out.println("Unk neighbor "+node + " at " + coord);
 				}
 			}
 		}
@@ -224,10 +222,10 @@ class UnknownMarkovNode<T> extends MarkovNode<T>{
 		baseState = aggregateSuggestions(suggestionsList);
 		
 		if(currentState != null){
-			for (Entry<UnknownMarkovNode<T>, IntBuffer> entry : unkNeighbors.entrySet()) {
+			for (Entry<UnknownMarkovNode<T>, MarkovCoordinate> entry : unkNeighbors.entrySet()) {
 				
 				HashMap<KnownMarkovNode<T>, Float> locProbs = currentState.locationProbabilities.get(entry.getValue());
-				System.out.println("Current state " + currentState + " at " + Arrays.toString(entry.getValue().array()) + " is " + locProbs);
+				System.out.println("Current state " + currentState + " at " + entry.getValue() + " is " + locProbs);
 				currentState.locs();
 				
 				// We know what's going to be there at that unknown location (or think we do)
@@ -248,9 +246,8 @@ class UnknownMarkovNode<T> extends MarkovNode<T>{
 	
 	public void solve(){
 		currentIteration++;
-
 	}
-		
+
 }
 
 class MarkovMessage<T>{
@@ -270,7 +267,38 @@ System.out.println("Coord is " + Arrays.toString(coord.array()));
 for(IntBuffer b : locationProbSum.keySet()){
 	System.out.println("Locatino prob sum key " + Arrays.toString(b.array()) + " is " + locationProbSum.get(b));				
 }
-
-
 */
+
+class MarkovCoordinate implements Comparable<MarkovCoordinate>{
+	int[] coords;
+	public MarkovCoordinate(int... c){
+		coords = Arrays.copyOf(c, c.length);
+	}
+	
+	public boolean equals(Object o){
+		if(o instanceof MarkovCoordinate){
+			MarkovCoordinate m = (MarkovCoordinate) o;
+			return Arrays.equals(m.coords, coords);
+		}
+		return false;
+	}
+
+	@Override
+	public int compareTo(MarkovCoordinate m) {
+		if(m.coords.length == coords.length){
+			for(int i = 0; i < coords.length; i++){
+				if(m.coords[i] < coords[i])
+					return -1;
+				else if(m.coords[i] > coords[i])
+					return 1;
+			}
+			return 0;
+		}
+		return -1;
+	}
+	
+	public String toString(){
+		return Arrays.toString(coords);
+	}
+}
 

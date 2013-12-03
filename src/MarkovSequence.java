@@ -47,7 +47,9 @@ public class MarkovSequence {
 		mrf.solve();
 		
 		mrf.initialize();
+
 		
+		System.out.println("Dude at -1 is " + mrf.nodes.get("Dude").locationProbabilities.get(new MarkovCoordinate(2)));		
 		//unk.simpleBestGuess();
 		//System.out.println("After compile Hello probs at one : " + mrf.nodes.get("Hello").locationProbabilities.get(oneBuffer).values());
 		
